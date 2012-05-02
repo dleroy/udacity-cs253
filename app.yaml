@@ -1,0 +1,8 @@
+application: udacity-dleroy
+version: 1
+runtime: python
+api_version: 1
+
+handlers:
+- url: /.*
+  script: cs253-udacity.py
