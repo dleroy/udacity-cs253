@@ -6,7 +6,7 @@ threadsafe: no
 
 handlers:
 - url: .*
-  script: rot13.py
+  script: main.app
 
 libraries:
 - name: webapp2

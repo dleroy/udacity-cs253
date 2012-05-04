@@ -5,8 +5,8 @@ api_version: 1
 threadsafe: no
 
 handlers:
-- url: .*
-  script: rot13.py
+- url: /.*
+  script: main.app
 
 libraries:
 - name: webapp2
