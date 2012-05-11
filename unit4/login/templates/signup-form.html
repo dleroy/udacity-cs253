@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <title>CS 253 Blog</title>
+
+    <style type="text/css">
+	  body {
+	    font-family: sans-serif;
+	    width: 800px;
+        margin: 0 auto;
+        padding: 10px;
+      }
+
+      .error {
+	    color: red
+	  }
+
+	  label {
+	    display: block;
+	    font-size: 20px;
+	  }
+
+	  input[type=text] {
+	    width: 400px;
+	    font-size: 20px;
+	    padding: 2px;
+	  }
+
+	  textarea {
+	    width: 400px;
+	    height: 200px;
+	    font-size: 17px;
+	  }
+
+	  input[type=submit] {
+	    font-size: 24px;
+	  }
+
+	  hr {
+	    margin: 20px auto;
+	  }
+	  
+	  .post {
+	    margin-top: 20px;
+	  }
+
+	  .post-subject {
+	    font-weight: bold;
+	    font-size: 20px;
+	  }
+
+	  .post-content {
+	    margin: 0;
+	    font-size: 17px;
+	  }
+    </style>
+
+  </head>
+
+  <body>
+	<form method="post">
+	  <h2>Signup</h2>
+	  <br>
+	  <label> Username
+		<input type="textarea" name="username" value={{username}}>
+		<b style="color: red">{{nameerror}}</b>
+	  </label>
+	  <br>
+	  <label> Password
+		<input type="password" name="password" value="">
+		<b style="color: red">{{passworderror}}</b>
+	  </label>
+	  <br>
+	  <label> Verify Password
+		<input type="password" name="verify" value="">
+		<b style="color: red">{{verifyerror}}</b>
+	  </label>
+	  <br>
+	  <label> Email (optional)
+		<input type="textarea" name="email" value="{{email}}">
+		<b style="color: red">{{emailerror}}</b>
+	  </label>
+	  <br>
+	  <br>
+	  <input type="submit">
+	</form>
+  </body>
+
+</html>
