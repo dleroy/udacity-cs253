@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+
+{% block content %}
+  {{post.render() | safe}}
+
+<h5>Queried {{seconds}} seconds ago</h5>
+
+{% endblock %}

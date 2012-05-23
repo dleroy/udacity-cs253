@@ -1,20 +1,26 @@
 import os
 import re
-from string import letters
 import random
 import string
 import hashlib
 import webapp2
 import jinja2
-from google.appengine.ext import db
 import json
 import logging
+import time
+import datetime
+import calendar
+from string import letters
+from google.appengine.ext import db
+from google.appengine.api import memcache
 
 logging.getLogger().setLevel(logging.DEBUG)
 
 template_dir = os.path.join(os.path.dirname(__file__), 'templates')
 jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir),
                                autoescape = True)
+
+lastupdate = time.time()
 
 def render_str(template, **params):
     t = jinja_env.get_template(template)
@@ -64,9 +70,19 @@ class Post(db.Model):
 
 class BlogFront(BlogHandler):
     def get(self):
-        posts = db.GqlQuery("select * from Post order by created desc limit 10")
-        logging.debug("Made it output");
-        self.render('front.html', posts = posts)
+# Add caching here
+        global lastupdate
+        posts = memcache.get("front")
+        if posts is not None:
+            self.render('front.html', 
+                        posts = posts, 
+                        seconds = int((time.time() - lastupdate)))
+        else:
+            posts = db.GqlQuery("select * from Post order by created desc limit 10")
+            memcache.add("front", posts)
+            self.render('front.html', 
+                        posts = posts, seconds = 0)            
+            lastupdate = time.time()
 
 
 class BlogFrontJSON(BlogHandler):
@@ -82,14 +98,28 @@ class BlogFrontJSON(BlogHandler):
 
 class PostPage(BlogHandler):
     def get(self, post_id):
-        key = db.Key.from_path('Post', int(post_id), parent=blog_key())
-        post = db.get(key)
+        logging.debug("checking cache...")
+        post = memcache.get(repr(post_id))
+        if post is not None:
+            logging.debug("found in cache...")
+            seconds = int(
+                (time.time() - 
+                 calendar.timegm(post.last_modified.utctimetuple())))
+            self.render("permalink.html", post = post, seconds = seconds)
+        else:
+            # Cache may have been flushed, need to repopulate
+            logging.debug("not found in cache...")
+            key = db.Key.from_path('Post', int(post_id), parent=blog_key())
+            post = db.get(key)
 
-        if not post:
-            self.error(404)
-            return
+            if not post:
+                self.error(404)
+                return
 
-        self.render("permalink.html", post = post)
+            post.last_modified = datetime.datetime.now()
+            logging.debug("adding %s to cache...", repr(post_id))
+            memcache.add(repr(post_id), post)
+            self.render("permalink.html", post = post, seconds = 0)
 
 # Permalink Page output in JSON
 class PostPageJSON(BlogHandler):
@@ -115,6 +145,9 @@ class NewPost(BlogHandler):
         if subject and content:
             p = Post(parent = blog_key(), subject = subject, content = content)
             p.put()
+            # add to cache
+            logging.debug("adding new post %s to cache...", repr(p.key().id()))
+            memcache.add(repr(p.key().id()), p)
             self.redirect('/blog/%s' % str(p.key().id()))
         else:
             error = "subject and content, please!"
@@ -330,6 +363,14 @@ class HomeHandler(BlogHandler):
 	u = User.get_by_id(int(user_id))
         self.response.out.write("Welcome %s!"%u.username)
 
+class FlushHandler(BlogHandler):
+
+    def get(self):
+        # Flush the entire cache
+        memcache.flush_all()
+        self.redirect("/blog")
+        
+
 app = webapp2.WSGIApplication([('/', MainPage),
                                ('/unit2/rot13', Rot13),
                                ('/unit2/signup', Signup),
@@ -343,5 +384,6 @@ app = webapp2.WSGIApplication([('/', MainPage),
                                ('/blog/login',  LoginHandler),
                                ('/blog/logout',  LogoutHandler),
                                ('/blog/welcome', HomeHandler),
+                               ('/blog/flush', FlushHandler),
                                ],
                               debug=True)
