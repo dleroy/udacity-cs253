@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link type="text/css" rel="stylesheet" href="/static/main.css" />
+
+  <title>CS 253 Wiki</title>
+</head>
+
+<body>
+  <a href="/" class="main-title">
+    CS 253 Wiki
+  </a>
+
+  <div id="content">
+	{% if user and editurl %}
+	<div class="navbar-center">
+	<a href={{ editurl }}>edit</a>
+	</div>
+	{% endif %}
+	<div class="navbar-right">
+	{% if user %}
+	<a href="/logout">logout</a> {{ user }}
+	{% else %}
+	<a href="/login">login</a>
+	<a href="/signup">signup</a>
+	{% endif %}
+	</div>
+	<div class=error>{{ error }}</div>
+  {% block content %}
+  {% endblock %}
+  </div>
+</body>
+
+</html>
+
